@@ -1,5 +1,6 @@
 package com.example.rickandmorty.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -22,9 +23,14 @@ public class MovieCharacter {
             sequenceName = "movie_characters_id_seq",
             allocationSize = 1)
     private Long id;
+    @Column(name = "external_id")
+    private Long externalId;
     private String name;
     @Enumerated(EnumType.STRING)
     private Status status;
     @Enumerated(EnumType.STRING)
     private Gender gender;
+    private String species;
+    private String type;
+    private String image;
 }
