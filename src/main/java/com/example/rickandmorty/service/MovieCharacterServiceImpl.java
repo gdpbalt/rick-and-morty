@@ -40,7 +40,6 @@ public class MovieCharacterServiceImpl implements MovieCharacterService {
         do {
             currentUrl = currentUrl == null ? externalApiUrl : apiResponseDto.getInfo().getNext();
             apiResponseDto = httpClient.get(currentUrl, ApiResponseDto.class);
-            log.debug("API response {}", apiResponseDto);
             saveDtosToDb(apiResponseDto);
         } while (apiResponseDto.getInfo().getNext() != null);
     }
@@ -76,9 +75,19 @@ public class MovieCharacterServiceImpl implements MovieCharacterService {
                 movieCharacterRepository.getAllByExternalIdIn(externalIds).stream()
                         .collect(Collectors.toMap(MovieCharacter::getExternalId,
                                 Function.identity()));
+        Set<Long> existingCharactersExternalIds = existingCharacters.keySet();
 
-        externalIds.removeAll(existingCharacters.keySet());
-        List<MovieCharacter> charactersToSave = externalIds.stream()
+        List<MovieCharacter> charactersToSave = existingCharactersExternalIds.stream()
+                .map(id -> {
+                    MovieCharacter character = mapper.toModel(externalDtos.get(id));
+                    character.setId(existingCharacters.get(id).getId());
+                    return character;
+                })
+                .collect(Collectors.toList());
+        movieCharacterRepository.saveAll(charactersToSave);
+
+        externalIds.removeAll(existingCharactersExternalIds);
+        charactersToSave = externalIds.stream()
                 .map(id -> mapper.toModel(externalDtos.get(id)))
                 .collect(Collectors.toList());
         movieCharacterRepository.saveAll(charactersToSave);
